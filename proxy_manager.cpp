@@ -8,45 +8,32 @@ bool InstallProxyManager(const std::vector<std::pair<std::string, std::string>> 
     CreateDirectoryA(path.c_str(), NULL);
     MessageBoxA(NULL, "Installation en cours.", "Info", MB_OK);
 
-    if (S_OK != URLDownloadToFile(NULL, "https://raw.githubusercontent.com/badge881/proxy-manager/refs/heads/prerequises/V1/proxy.ps1", (path + "\\proxy.ps1").c_str(), 0, NULL))
+    if (S_OK != URLDownloadToFile(NULL, "https://raw.githubusercontent.com/badge881/proxy-manager/refs/heads/prerequises/V2/proxy.exe", (path + "\\proxy.exe").c_str(), 0, NULL))
     {
-        MessageBoxW(NULL, L"Erreur lors du téléchargement de la ressource : « proxy.ps1 ».\nMerci de vérifier votre connexion Internet.", L"ERREUR", MB_OK);
-        return false;
-    }
-    if (S_OK != URLDownloadToFile(NULL, "https://raw.githubusercontent.com/badge881/proxy-manager/refs/heads/prerequises/V1/prepareLink.ps1", (path + "\\prepareLink.ps1").c_str(), 0, NULL))
-    {
-        MessageBoxW(NULL, L"Erreur lors du téléchargement de la ressource : « prepareLink.ps1 ».\nMerci de vérifier votre connexion Internet.", L"ERREUR", MB_OK);
+        MessageBoxW(NULL, L"Erreur lors du téléchargement de la ressource : « proxy.exe ».\nMerci de vérifier votre connexion Internet.", L"ERREUR", MB_OK);
         return false;
     }
 
-    std::ofstream json(path + "\\proxy.json");
-    json << "{";
-    for (const auto& [SSID, proxy] : ssid_ip_list)
-        json << "\"" << SSID << "\": \"" << proxy << "\",";
-    if (json.tellp() > 1)
-        json.seekp(-1, std::ios_base::end);
-    json << "}";
+    std::ofstream data(path + "\\proxy.txt");
+    for (const auto &[SSID, proxy] : ssid_ip_list)
+        data << SSID << "\n"
+             << proxy << "\n";
 
-    STARTUPINFO si = { sizeof(si) };
+    STARTUPINFO si = {sizeof(si)};
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
 
     PROCESS_INFORMATION pi;
-
-    if (!CreateProcessAsUserA(
-        NULL,               
-        NULL,               
-        ("powershell.exe -NonInteractive -WindowStyle Hidden -Command $(Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser; " + path + "\\prepareLink.ps1; rm " + path + "\\prepareLink.ps1; )").data(),
-        NULL,
-        NULL,             
-        FALSE,              
-        CREATE_NO_WINDOW,   
-        NULL,               
-        NULL,               
-        &si,                
-        &pi                 
-    )){
-        MessageBoxA(NULL, "Erreur lors de l'installation.", "ERREUR", MB_OK);
+    if (!CreateProcessAsUserA(NULL, NULL, const_cast<char *>("powershell -Command $($WshShell = New-Object -ComObject WScript.Shell;\
+$Shortcut = $WshShell.CreateShortcut(\\\"$env:USERPROFILE\\Desktop\\proxy_manager.lnk\\\");\
+$Shortcut.TargetPath = \\\"C:\\Users\\Public\\Documents\\.proxy\\proxy.exe\\\";\
+$Shortcut.WindowStyle = 7;\
+$Shortcut.Description = \\\"proxy manager\\\";\
+$Shortcut.IconLocation = \\\"%SystemRoot%\\System32\\SHELL32.dll,9\\\";\
+$Shortcut.Save();)"),
+                              NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+    {
+        MessageBoxA(NULL, "Erreur lors de la creation du lien sur le bureau.", "ERREUR", MB_OK);
         return false;
     }
     WaitForSingleObject(pi.hProcess, INFINITE);
@@ -57,37 +44,15 @@ bool InstallProxyManager(const std::vector<std::pair<std::string, std::string>> 
 }
 
 const char g_szClassName[] = "MainWindow";
-const char g_szHelpClassName[] = "HelpWindow";
 HWND hEditSSID, hEditIP, hList;
 std::vector<std::pair<std::string, std::string>> ssid_ip_list;
 
-void CreateHelpWindow(HINSTANCE hInstance)
+void CreateHelpWindow()
 {
-    WNDCLASSEXA wc = {0};
-    wc.cbSize = sizeof(WNDCLASSEXA);
-    wc.lpfnWndProc = DefWindowProcA;
-    wc.hInstance = hInstance;
-    wc.lpszClassName = g_szHelpClassName;
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-
-    RegisterClassExA(&wc);
-
-    HWND hHelpWnd = CreateWindowExA(
-        0,
-        g_szHelpClassName,
-        "Aide",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 300, 240,
-        NULL, NULL, hInstance, NULL);
-
-    CreateWindowW(L"static", L"Manuel d'utilisation :\n\
+    MessageBoxW(NULL, L"Manuel d'utilisation :\n\
 1) Saisissez la paire, à savoir le nom du réseau Wi-Fi et l'adresse IP du proxy, par exemple : « Wi-Fi-Free » et « 1.1.1.1:3128 ».\n\
 2) Validez la sélection en cliquant sur le bouton correspondant.\n\
-3) Une fois la programmation terminée, veuillez cliquer sur « Fermer ». Dans le cas contraire, veuillez continuer à l'étape 1.",
-                  WS_VISIBLE | WS_CHILD, 10, 10, 265, 180, hHelpWnd, NULL, NULL, NULL);
-
-    ShowWindow(hHelpWnd, SW_SHOW);
-    UpdateWindow(hHelpWnd);
+3) Une fois la programmation terminée, veuillez cliquer sur « Fermer ». Dans le cas contraire, veuillez continuer à l'étape 1.", L"Aide", MB_OK);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -101,11 +66,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         hEditSSID = CreateWindowA("edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 90, 40, 200, 20, hwnd, NULL, NULL, NULL);
         CreateWindowA("static", "IP Proxy: ", WS_VISIBLE | WS_CHILD, 10, 70, 70, 20, hwnd, NULL, NULL, NULL);
         hEditIP = CreateWindowA("edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 90, 70, 200, 20, hwnd, NULL, NULL, NULL);
-        CreateWindowW(L"button", L"Valider", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 37, 120, 25, hwnd, (HMENU)1, NULL, NULL);
-        CreateWindowA("button", "Fermer", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 67, 120, 25, hwnd, (HMENU)2, NULL, NULL);
+        CreateWindowW(L"button", L"Valider", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 37, 120, 55, hwnd, (HMENU)1, NULL, NULL);
         hList = CreateWindowA("listbox", "", WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY | LBS_STANDARD, 10, 100, 410, 120, hwnd, NULL, NULL, NULL);
         CreateWindowA("button", "Modifier", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 220, 200, 25, hwnd, (HMENU)4, NULL, NULL);
         CreateWindowA("button", "Supprimer", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 220, 200, 25, hwnd, (HMENU)5, NULL, NULL);
+        CreateWindowA("button", "Fermer", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 250, 120, 25, hwnd, (HMENU)2, NULL, NULL);
         break;
     case WM_COMMAND:
         if (LOWORD(wParam) == 1)
@@ -122,10 +87,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             if (InstallProxyManager(ssid_ip_list))
                 DestroyWindow(hwnd);
+            else
+                MessageBoxW(NULL, L"L'installation a échouée", L"ERREUR", MB_OK);
         }
         else if (LOWORD(wParam) == 3)
         {
-            CreateHelpWindow((HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE));
+            CreateHelpWindow();
         }
         else if (LOWORD(wParam) == 4)
         {
@@ -192,7 +159,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
         g_szClassName,
         "Proxy Manager Installer",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 450, 300,
+        CW_USEDEFAULT, CW_USEDEFAULT, 450, 330,
         NULL, NULL, hInstance, NULL);
 
     if (hwnd == NULL)
