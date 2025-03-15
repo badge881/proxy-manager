@@ -1,5 +1,5 @@
 # proxy-manager
-Vous devez souvent changer de proxy pour diverses raisons ? En fonction de l'endroit où vous vous trouvez ? Sans les droits d'administarteurs ? Voici un programme d'installation qui vous permettra en un clic de changer votre proxy en fonction du wifi sur lequel vous êtes connecté, sans les droits d'administrateurs.
+Vous devez souvent changer de proxy ? Selon où vous êtes ? Sans droits d'admin ? Ce programme vous permet de changer votre proxy en un clic, en fonction du wifi sur lequel vous êtes connecté.
 
 ## Licence
 Merci de lire attentivement la licence et d'en accepter les termes avant utilisation, copie, modification ou diffusion.
