@@ -10,11 +10,11 @@ Merci de lire attentivement la licence et d'en accepter les termes avant utilisa
 Après avoir téléchargé et exécuté le fichier `proxy_manager.exe`, une fenêtre s'ouvre alors à vous. Vous pourrez alors commencer à effectuer les réglages en entrant les noms des réseaux Wi-Fi, puis le proxy qui doit y être associé si vous vous y connectez. Une fois que vous avez terminé, fermez la fenêtre en cliquant sur le bouton `Fermer`. Attention, si vous cliquez sur la croix, votre sélection ne sera pas enregistrée. Vous devrez donc réexécuter le fichier, perdant ainsi toutes les modifications effectuées. Après cette sélection, une icône nommée `proxy_manager` apparaitra sur votre bureau. En double-cliquant dessus, votre proxy sera changé en fonction des réglages effectués juste avant.
 
 ## Exemple
-![image 1](https://github.com/badge881/proxy-manager/tree/prerequises/images/1.png?raw=true)
-![image 2](https://github.com/badge881/proxy-manager/tree/prerequises/images/2.png?raw=true)
-![image 3](https://github.com/badge881/proxy-manager/tree/prerequises/images/3.png?raw=true)
-![image 4](https://github.com/badge881/proxy-manager/tree/prerequises/images/4.png?raw=true)
-![image 5](https://github.com/badge881/proxy-manager/tree/prerequises/images/5.png?raw=true)
-![image 6](https://github.com/badge881/proxy-manager/tree/prerequises/images/6.png?raw=true)
-![image 7](https://github.com/badge881/proxy-manager/tree/prerequises/images/7.png?raw=true)
-![image 8](https://github.com/badge881/proxy-manager/tree/prerequises/images/8.png?raw=true)
+![image 1](https://github.com/badge881/proxy-manager/blob/prerequises/images/1.png?raw=true)
+![image 2](https://github.com/badge881/proxy-manager/blob/prerequises/images/2.png?raw=true)
+![image 3](https://github.com/badge881/proxy-manager/blob/prerequises/images/3.png?raw=true)
+![image 4](https://github.com/badge881/proxy-manager/blob/prerequises/images/4.png?raw=true)
+![image 5](https://github.com/badge881/proxy-manager/blob/prerequises/images/5.png?raw=true)
+![image 6](https://github.com/badge881/proxy-manager/blob/prerequises/images/6.png?raw=true)
+![image 7](https://github.com/badge881/proxy-manager/blob/prerequises/images/7.png?raw=true)
+![image 8](https://github.com/badge881/proxy-manager/blob/prerequises/images/8.png?raw=true)
