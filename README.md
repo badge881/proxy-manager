@@ -1,7 +1,7 @@
 # proxy-manager
 Vous devez souvent changer de proxy ? Selon où vous êtes ? Sans droits d'admin ? Ce programme vous permet de changer votre proxy en un clic, en fonction du wifi sur lequel vous êtes connecté.
 
-Télécharger le module : [github.com.badge881/proxy-manager/download/proxy_manager.exe](https://github.com/badge881/proxy-manager/releases/download/v2.0/proxy_manager.exe)
+Télécharger le module : [https://github.com/badge881/proxy-manager/download/proxy_manager.exe](https://github.com/badge881/proxy-manager/releases/download/v2.0/proxy_manager.exe)
 
 ## Licence
 Merci de lire attentivement la licence et d'en accepter les termes avant utilisation, copie, modification ou diffusion.
