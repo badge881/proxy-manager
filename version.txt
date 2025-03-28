@@ -1,0 +1,9 @@
+0
+forbidden
+link to proxy_manager.exe
+1
+allowed
+https://github.com/badge881/proxy-manager/releases/download/alpha/proxy_manager.exe
+2
+allowed
+https://github.com/badge881/proxy-manager/releases/download/v2.0/proxy_manager.exe
