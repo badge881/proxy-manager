@@ -2,22 +2,32 @@
 #include <vector>
 #include <windows.h>
 
+int version = 3;
+
 bool InstallProxyManager(const std::vector<std::pair<std::string, std::string>> &ssid_ip_list)
 {
     std::string path = "C:\\Users\\Public\\Documents\\.proxy";
     CreateDirectoryA(path.c_str(), NULL);
     MessageBoxA(NULL, "Installation en cours.", "Info", MB_OK);
 
-    if (S_OK != URLDownloadToFile(NULL, "https://raw.githubusercontent.com/badge881/proxy-manager/refs/heads/prerequises/V2/proxy.exe", (path + "\\proxy.exe").c_str(), 0, NULL))
+    if (S_OK != URLDownloadToFile(NULL, "https://raw.githubusercontent.com/badge881/proxy-manager/refs/heads/prerequises/V3/proxy.exe", (path + "\\proxy.exe").c_str(), 0, NULL))
     {
         MessageBoxW(NULL, L"Erreur lors du téléchargement de la ressource : « proxy.exe ».\nMerci de vérifier votre connexion Internet.", L"ERREUR", MB_OK);
         return false;
     }
 
+    if (S_OK != URLDownloadToFile(NULL, "https://raw.githubusercontent.com/badge881/proxy-manager/refs/heads/prerequises/V3/upgrade.exe", (path + "\\upgrade.exe").c_str(), 0, NULL))
+    {
+        MessageBoxW(NULL, L"Erreur lors du téléchargement de la ressource : « upgrade.exe ».\nMerci de vérifier votre connexion Internet.", L"ERREUR", MB_OK);
+        return false;
+    }
+
     std::ofstream data(path + "\\proxy.txt");
     for (const auto &[SSID, proxy] : ssid_ip_list)
-        data << SSID << "\n"
+        data << "proxy: " << SSID << "\n"
              << proxy << "\n";
+    data << "version\n"
+         << version << "\n";
 
     STARTUPINFO si = {sizeof(si)};
     si.dwFlags = STARTF_USESHOWWINDOW;
@@ -26,7 +36,7 @@ bool InstallProxyManager(const std::vector<std::pair<std::string, std::string>> 
     PROCESS_INFORMATION pi;
     if (!CreateProcessAsUserA(NULL, NULL, const_cast<char *>("powershell -Command $($WshShell = New-Object -ComObject WScript.Shell;\
 $Shortcut = $WshShell.CreateShortcut(\\\"$env:USERPROFILE\\Desktop\\proxy_manager.lnk\\\");\
-$Shortcut.TargetPath = \\\"C:\\Users\\Public\\Documents\\.proxy\\proxy.exe\\\";\
+$Shortcut.TargetPath = \\\"C:\\Users\\Public\\Documents\\.proxy\\upgrade.exe\\\";\
 $Shortcut.WindowStyle = 7;\
 $Shortcut.Description = \\\"proxy manager\\\";\
 $Shortcut.IconLocation = \\\"%SystemRoot%\\System32\\SHELL32.dll,9\\\";\
@@ -44,7 +54,7 @@ $Shortcut.Save();)"),
 }
 
 const char g_szClassName[] = "MainWindow";
-HWND hEditSSID, hEditIP, hList;
+HWND hEditSSID, hEditIP, hList, hEditPort;
 std::vector<std::pair<std::string, std::string>> ssid_ip_list;
 
 void CreateHelpWindow()
@@ -52,7 +62,8 @@ void CreateHelpWindow()
     MessageBoxW(NULL, L"Manuel d'utilisation :\n\
 1) Saisissez la paire, à savoir le nom du réseau Wi-Fi et l'adresse IP du proxy, par exemple : « Wi-Fi-Free » et « 1.1.1.1:3128 ».\n\
 2) Validez la sélection en cliquant sur le bouton correspondant.\n\
-3) Une fois la programmation terminée, veuillez cliquer sur « Fermer ». Dans le cas contraire, veuillez continuer à l'étape 1.", L"Aide", MB_OK);
+3) Une fois la programmation terminée, veuillez cliquer sur « Fermer ». Dans le cas contraire, veuillez continuer à l'étape 1.",
+                L"Aide", MB_OK);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -60,13 +71,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
     case WM_CREATE:
-        CreateWindowW(L"static", L"Saisissez le nom du Wi-Fi et son adresse IP.", WS_VISIBLE | WS_CHILD, 10, 10, 345, 20, hwnd, NULL, NULL, NULL);
+        CreateWindowA("static", "Saisissez le nom du Wi-Fi et son adresse IP.", WS_VISIBLE | WS_CHILD, 10, 10, 345, 20, hwnd, NULL, NULL, NULL);
         CreateWindowA("button", "Aide", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 360, 10, 60, 20, hwnd, (HMENU)3, NULL, NULL);
-        CreateWindowA("static", "WiFi: ", WS_VISIBLE | WS_CHILD, 10, 40, 70, 20, hwnd, NULL, NULL, NULL);
-        hEditSSID = CreateWindowA("edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 90, 40, 200, 20, hwnd, NULL, NULL, NULL);
-        CreateWindowA("static", "IP Proxy: ", WS_VISIBLE | WS_CHILD, 10, 70, 70, 20, hwnd, NULL, NULL, NULL);
-        hEditIP = CreateWindowA("edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 90, 70, 200, 20, hwnd, NULL, NULL, NULL);
-        CreateWindowW(L"button", L"Valider", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 37, 120, 55, hwnd, (HMENU)1, NULL, NULL);
+        CreateWindowA("static", "WiFi: ", WS_VISIBLE | WS_CHILD, 10, 40, 65, 20, hwnd, NULL, NULL, NULL);
+        hEditSSID = CreateWindowA("edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 85, 40, 205, 20, hwnd, NULL, NULL, NULL);
+        CreateWindowA("static", "IP Proxy: ", WS_VISIBLE | WS_CHILD, 10, 70, 65, 20, hwnd, NULL, NULL, NULL);
+        hEditIP = CreateWindowA("edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 85, 70, 115, 20, hwnd, NULL, NULL, NULL);
+        CreateWindowA("static", "Port: ", WS_VISIBLE | WS_CHILD, 206, 70, 35, 20, hwnd, NULL, NULL, NULL);
+        hEditPort = CreateWindowA("edit", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 248, 70, 42, 20, hwnd, NULL, NULL, NULL);
+        CreateWindowA("button", "Valider", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 37, 120, 55, hwnd, (HMENU)1, NULL, NULL);
         hList = CreateWindowA("listbox", "", WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY | LBS_STANDARD, 10, 100, 410, 120, hwnd, NULL, NULL, NULL);
         CreateWindowA("button", "Modifier", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 220, 200, 25, hwnd, (HMENU)4, NULL, NULL);
         CreateWindowA("button", "Supprimer", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 220, 200, 25, hwnd, (HMENU)5, NULL, NULL);
@@ -75,13 +88,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         if (LOWORD(wParam) == 1)
         {
-            char ssid[256], ip[256];
+            char ssid[256], ip[256], port[256];
             GetWindowTextA(hEditSSID, ssid, 256);
             GetWindowTextA(hEditIP, ip, 256);
-            ssid_ip_list.insert(ssid_ip_list.begin(), make_pair(std::string(ssid), std::string(ip)));
-            SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)(ssid + std::string(" - ") + ip).c_str());
+            GetWindowTextA(hEditPort, port, 256);
+            ssid_ip_list.insert(ssid_ip_list.begin(), make_pair(std::string(ssid), std::string(ip) + ":" + port));
+            SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)(ssid + std::string(" - ") + ip + ":" + port).c_str());
             SetWindowTextA(hEditSSID, "");
             SetWindowTextA(hEditIP, "");
+            SetWindowTextA(hEditPort, "");
         }
         else if (LOWORD(wParam) == 2)
         {
@@ -107,8 +122,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 {
                     std::string ssid = item.substr(0, pos);
                     std::string ip = item.substr(pos + 3);
+                    size_t portPos = ip.find(":");
+                    std::string port = ip.substr(portPos+1);
+                    ip = ip.erase(portPos, std::string::npos);
                     SetWindowTextA(hEditSSID, ssid.c_str());
                     SetWindowTextA(hEditIP, ip.c_str());
+                    SetWindowTextA(hEditPort, port.c_str());
                     ssid_ip_list.erase(ssid_ip_list.begin() + index);
                     SendMessageA(hList, LB_DELETESTRING, index, 0);
                 }
@@ -138,6 +157,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
+    const int argc = __argc;
+    char **argv = __argv;
+
     WNDCLASSEXA wc = {0};
     wc.cbSize = sizeof(WNDCLASSEXA);
     wc.lpfnWndProc = WndProc;

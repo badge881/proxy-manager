@@ -1,16 +1,21 @@
 #include <iostream>
 #include <fstream>
 #include <windows.h>
+#include "getProxy.txt.hpp"
 using namespace std;
 
-string Get_SSID() {
+int version = 3;
+
+string Get_SSID()
+{
     SECURITY_ATTRIBUTES saAttr;
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
     saAttr.lpSecurityDescriptor = NULL;
 
     HANDLE hRead, hWrite;
-    if (!CreatePipe(&hRead, &hWrite, &saAttr, 0)) {
+    if (!CreatePipe(&hRead, &hWrite, &saAttr, 0))
+    {
         throw runtime_error("Failed to create pipe");
     }
 
@@ -25,8 +30,9 @@ string Get_SSID() {
     si.hStdInput = hRead;
     ZeroMemory(&pi, sizeof(pi));
 
-    const char* command = "powershell -Command \"(Get-NetConnectionProfile).Name\"";
-    if (!CreateProcessAsUserA(NULL, NULL, const_cast<char*>(command), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+    const char *command = "powershell -Command \"(Get-NetConnectionProfile).Name\"";
+    if (!CreateProcessAsUserA(NULL, NULL, const_cast<char *>(command), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+    {
         CloseHandle(hWrite);
         CloseHandle(hRead);
         throw runtime_error("Failed to create process");
@@ -38,7 +44,8 @@ string Get_SSID() {
     string result;
     char buffer[128];
     DWORD bytesRead;
-    while (ReadFile(hRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) || bytesRead > 0) {
+    while (ReadFile(hRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) || bytesRead > 0)
+    {
         buffer[bytesRead] = '\0';
         result += buffer;
     }
@@ -70,7 +77,6 @@ void SetProxyEnable(string proxy)
         MessageBoxW(NULL, (L"Erreur lors de l'activation du proxy (error code: 3" + to_wstring(result) + L")").c_str(), L"ERREUR", MB_OK);
         return;
     }
-
     RegCloseKey(hKey);
 }
 
@@ -94,31 +100,25 @@ void SetProxyDisable()
     RegCloseKey(hKey);
 }
 
-const string path = "C:\\Users\\Public\\Documents\\.proxy";
-const char *delVals = " \t\n\r\f\v";
-
-inline string trim(string s, const char *t = delVals)
+int main(int argc, char *argv[])
 {
-    s.erase(0, s.find_first_not_of(t));
-    s.erase(s.find_last_not_of(t) + 1);
-    return s;
-}
-
-int main()
-{
-    string curr_ssid = trim(Get_SSID());
-    ifstream data(path + "\\proxy.txt");
-    SetProxyDisable();
-    while (!data.eof())
+    if (argc != 1)
     {
-        string ssid, proxy;
-        getline(data, ssid);
-        getline(data, proxy);
-        if (trim(ssid) == curr_ssid)
-        {
-            SetProxyEnable(trim(proxy));
-            return 0;
-        }
+        MessageBoxW(NULL, L"Ce programme ne prend pas d'arguments", L"ERREUR", MB_OK);
+        return 0;
+    }
+
+    string curr_ssid = trim(Get_SSID());
+    string ipProxy = getSetting("proxy: " + curr_ssid);
+    if (ipProxy == "")
+    {
+        SetProxyDisable();
+        MessageBoxW(NULL, L"Le proxy a bien été désactivé.", L"Info", MB_OK);
+    }
+    else
+    {
+        SetProxyEnable(ipProxy);
+        MessageBoxW(NULL, L"Le proxy a bien été activé.", L"Info", MB_OK);
     }
     return 0;
 }
